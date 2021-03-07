@@ -23,7 +23,6 @@ services:
       - "8080:8080"
     hostname: server
     image: server-image
-    restart: on-failure
     env_file:
       - ./.env.dev
     restart: always
