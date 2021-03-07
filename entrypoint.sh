@@ -12,6 +12,7 @@ then
 fi
 
 python manage.py flush --no-input
+python manage.py makemigrations candy_delivery_app
 python manage.py migrate
 
 exec "$@"
