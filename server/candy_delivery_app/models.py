@@ -37,10 +37,10 @@ class Courier(models.Model):
 
 
 class NewOrder(models.Model):
-    order_id = models.PositiveIntegerField(primary_key=True)
+    order_id = models.PositiveIntegerField(primary_key=True, validators=[MinValueValidator(1)])
     weight = models.FloatField(validators=[MinValueValidator(0.01), MaxValueValidator(50)])
-    region = models.PositiveIntegerField()
-    delivery_hours = ArrayField(models.CharField(max_length=12))
+    region = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    delivery_hours = ArrayField(models.CharField(max_length=12, validators=[validate_hours]))
 
 
 class AssignedOrder(NewOrder):

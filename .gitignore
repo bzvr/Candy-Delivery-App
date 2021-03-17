@@ -132,5 +132,7 @@ dmypy.json
 .DS_store
 
 server/postman.py
-server/test.json
+server/couriers.json
+server/patch.json
+server/orders.json
 
