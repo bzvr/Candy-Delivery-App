@@ -9,7 +9,7 @@ from candy_delivery_app.models import Courier
 from candy_delivery_app.serializers import CourierSerializer
 
 
-class CourierList(APIView):
+class CourierView(APIView):
 
     def get(self, request, format=None):
         couriers = Courier.objects.all()
@@ -18,7 +18,8 @@ class CourierList(APIView):
 
     def post(self, request, format=None):
         serializer = CourierSerializer(data=request.data['data'], many=True)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"couriers": list(map(lambda x: {"id": x["courier_id"]}, serializer.data))},
+                            status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

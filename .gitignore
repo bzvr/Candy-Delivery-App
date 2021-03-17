@@ -130,3 +130,7 @@ dmypy.json
 
 .idea/
 .DS_store
+
+server/postman.py
+server/test.json
+

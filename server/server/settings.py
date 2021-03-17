@@ -128,3 +128,7 @@ STATIC_URL = '/static/'
 DJANGO_ADMIN = (
     os.environ.get("DJANGO_ADMIN_USERNAME", 'admin'), os.environ.get("DJANGO_ADMIN_EMAIL", 'admin@mysite.com'),
     os.environ.get("DJANGO_ADMIN_PASSWORD", 'admin'))
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'candy_delivery_app.utils.custom_exception_handler'
+}
