@@ -1,14 +1,30 @@
+import re
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
-import re
-
 from rest_framework.exceptions import ValidationError
 
 
 def validate_hours(value):
     if not re.match(r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]-(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", value):
         raise ValidationError(f'{value} is not a correct time interval')
+
+
+class OrderStatus(models.IntegerChoices):
+    NEW = 0, "new"
+    ASSIGNED = 1, "assigned"
+    COMPLETED = 2, "completed"
+
+
+class Pack(models.Model):
+    assign_time = models.DateTimeField()
+    n_orders = models.PositiveIntegerField()
+    completed_orders = models.PositiveIntegerField(default=0)
+
+    @property
+    def pack_id(self):
+        return self.id
 
 
 class Courier(models.Model):
@@ -25,7 +41,8 @@ class Courier(models.Model):
     working_hours = ArrayField(models.CharField(max_length=12, validators=[validate_hours]), default=list, blank=True)
     completed_order_packs = models.PositiveIntegerField(default=0)
     at_work = models.BooleanField(default=False)
-    last_timestamp = models.TimeField(null=True, blank=True)
+    last_timestamp = models.DateTimeField(null=True, blank=True)
+    pack = models.ForeignKey(Pack, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
 
     @property
     def max_weight(self):
@@ -36,16 +53,11 @@ class Courier(models.Model):
         return self.WEIGHT_CONSTRAINTS[self.courier_type][1]
 
 
-class NewOrder(models.Model):
+class Order(models.Model):
     order_id = models.PositiveIntegerField(primary_key=True, validators=[MinValueValidator(1)])
     weight = models.FloatField(validators=[MinValueValidator(0.01), MaxValueValidator(50)])
     region = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     delivery_hours = ArrayField(models.CharField(max_length=12, validators=[validate_hours]))
-
-
-class AssignedOrder(NewOrder):
-    courier = models.ForeignKey("Courier", on_delete=models.CASCADE)
-
-
-class CompletedOrder(AssignedOrder):
-    pass
+    status = models.IntegerField(default=OrderStatus.NEW, choices=OrderStatus.choices)
+    courier = models.ForeignKey(Courier, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
+    pack = models.ForeignKey(Pack, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)

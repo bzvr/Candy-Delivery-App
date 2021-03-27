@@ -27,6 +27,17 @@ services:
       - ./.env.dev
     restart: always
 
+  redis:
+    hostname: redis
+    restart: always
+    ports:
+      - "6379"
+    image: redis:latest
+    volumes:
+      - redisdata:/data
+    command: [sh, -c, "rm -f /data/dump.rdb && redis-server"]
+
 volumes:
   postgresql-data:
+  redisdata:
 

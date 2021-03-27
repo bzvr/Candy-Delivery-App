@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
 from rest_framework.settings import api_settings
 
-from candy_delivery_app.models import Courier, NewOrder
+from candy_delivery_app.models import Courier, Order
 
 
 class CourierSerializer(serializers.ModelSerializer):
@@ -30,9 +30,10 @@ class CourierSerializer(serializers.ModelSerializer):
         return super(CourierSerializer, self).update(instance, validated_data)
 
 
-class NewOrderSerializer(serializers.ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = NewOrder
+        model = Order
         fields = ['order_id', 'weight', 'region', 'delivery_hours']
 
     def run_validation(self, data=empty):
@@ -44,4 +45,23 @@ class NewOrderSerializer(serializers.ModelSerializer):
                     api_settings.NON_FIELD_ERRORS_KEY: errors,
                 })
 
-        return super(NewOrderSerializer, self).run_validation(data)
+        return super(OrderSerializer, self).run_validation(data)
+
+
+class StuffOrderSerializer(serializers.ModelSerializer):
+    courier = serializers.PrimaryKeyRelatedField(allow_null=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['order_id', 'weight', 'region', 'delivery_hours', 'status', 'courier']
+
+    def run_validation(self, data=empty):
+        if data is not empty:
+            unknown = set(data) - set(self.fields)
+            if unknown:
+                errors = [f"Unknown field: {f}" for f in unknown]
+                raise serializers.ValidationError({
+                    api_settings.NON_FIELD_ERRORS_KEY: errors,
+                })
+
+        return super(StuffOrderSerializer, self).run_validation(data)
