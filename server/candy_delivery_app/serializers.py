@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
 from rest_framework.settings import api_settings
 
@@ -50,10 +49,11 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class StuffOrderSerializer(serializers.ModelSerializer):
     courier = serializers.PrimaryKeyRelatedField(allow_null=True, read_only=True)
+    pack = serializers.PrimaryKeyRelatedField(allow_null=True, read_only=True)
 
     class Meta:
         model = Order
-        fields = ['order_id', 'weight', 'region', 'delivery_hours', 'status', 'courier']
+        fields = ['order_id', 'weight', 'region', 'delivery_hours', 'status', 'courier', 'pack', 'complete_time_seconds']
 
     def run_validation(self, data=empty):
         if data is not empty:

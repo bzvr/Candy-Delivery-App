@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 
 from dateutil import parser
+from django.db.transaction import atomic
 from rest_framework.views import exception_handler
 
 CLASS_NAME = {"CourierView": ("courier_id", "couriers"), "OrderView": ("order_id", "orders"),
@@ -15,7 +16,7 @@ def custom_exception_handler(exc, context):
     try:
         sid, name = CLASS_NAME[context['view'].__class__.__name__]
     except KeyError:
-        print(f"NOT CUSTOM EXCEPTION: {response.__dict__}")
+        print(f"NOT CUSTOM EXCEPTION: {response}")
         return response
 
     if response is not None:
@@ -66,3 +67,13 @@ class DateTimeEncoder(json.JSONEncoder):
         if isinstance(o, datetime):
             return o.isoformat()[:-10] + 'Z'
         return json.JSONEncoder.default(self, o)
+
+
+@atomic
+def save_multiple_objects(obj_list):
+    for o in obj_list:
+        if isinstance(o, list):
+            for nested in o:
+                nested.save()
+        else:
+            o.save()

@@ -1,6 +1,7 @@
 import json
 
 from dateutil import parser
+from django.db.models import F
 from redis import Redis
 from django.utils.timezone import now
 from rest_framework import status
@@ -9,20 +10,19 @@ from rest_framework.views import APIView
 
 from candy_delivery_app.models import Courier, Order, OrderStatus, Pack
 from candy_delivery_app.serializers import CourierSerializer, OrderSerializer, StuffOrderSerializer
-from candy_delivery_app.utils import is_time_overlapping, DateTimeEncoder
+from candy_delivery_app.utils import is_time_overlapping, DateTimeEncoder, save_multiple_objects
 
 order_packs_db = Redis(host='redis', port=6379, db=0)
 
 
 def get_orders_for_pack(courier: Courier):
     retrieved = Order.objects.filter(status=OrderStatus.NEW, region__in=courier.regions,
-                                     weight__range=(0.01, courier.max_weight)).order_by("weight")
+                                     weight__range=(0.01, courier.max_weight)).order_by("-weight")
     current_weight = 0
     result = []
     for order in retrieved:
-        if current_weight + order.weight > courier.max_weight:
-            break
-        if is_time_overlapping(order.delivery_hours, courier.working_hours):
+        if is_time_overlapping(order.delivery_hours,
+                               courier.working_hours) and current_weight + order.weight <= courier.max_weight:
             result.append(order)
             current_weight += order.weight
     return result
@@ -52,7 +52,10 @@ class CourierView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, pk):
-        courier = Courier.objects.get(courier_id=pk)
+        try:
+            courier = Courier.objects.get(courier_id=pk)
+        except Courier.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = CourierSerializer(courier, data=request.data,
                                        partial=True)
         if serializer.is_valid(raise_exception=True):
@@ -88,7 +91,7 @@ class StuffOrderView(APIView):
 
 
 class AssignOrderView(APIView):
-    http_method_names = ["post", "get"]
+    http_method_names = ["post"]
 
     def post(self, request, format=None):
         cid = request.data.get("courier_id", None)
@@ -106,20 +109,19 @@ class AssignOrderView(APIView):
                 order_ids = list(map(lambda x: x.order_id, orders))
                 pack = {"orders": order_ids, "assign_time": now()}
                 new_pack = Pack(assign_time=pack["assign_time"], n_orders=len(order_ids))
-                new_pack.save()
 
-                for order in orders:
-                    order.status = OrderStatus.ASSIGNED
-                    order.courier = courier
-                    order.pack = new_pack
-                    order.save()
+                for i in range(len(orders)):
+                    orders[i].status = OrderStatus.ASSIGNED
+                    orders[i].courier = courier
+                    orders[i].pack = new_pack
 
                 order_packs_db.set(str(courier.courier_id), json.dumps(pack, cls=DateTimeEncoder))
 
                 courier.at_work = True
-                courier.pack = pack
+                courier.pack = new_pack
                 courier.last_timestamp = pack["assign_time"]
-                courier.save()
+
+                save_multiple_objects([new_pack, orders, courier])
 
                 return Response(
                     {"orders": list(map(lambda x: {"id": x}, order_ids)), "assign_time": pack["assign_time"]},
@@ -133,6 +135,45 @@ class AssignOrderView(APIView):
             return Response({"courier_id": f"courier with this courier id does not exist ({cid})"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        counter = order_packs_db.incr('counter')
-        return Response({"counter": counter})
+
+class CompleteOrderView(APIView):
+    http_method_names = ["post"]
+
+    def post(self, request, format=None):
+        cid = request.data.get("courier_id", None)
+        oid = request.data.get("order_id", None)
+        try:
+            complete_time = parser.isoparse(request.data.get("assign_time", None))
+            if cid is None:
+                raise Courier.DoesNotExist
+            if oid is None:
+                raise Order.DoesNotExist
+
+            courier = Courier.objects.get(courier_id=cid)
+            order = Order.objects.get(order_id=oid)
+
+            if order.status != OrderStatus.ASSIGNED or order.courier != courier or not courier.at_work:
+                raise Exception
+
+            data = json.loads(order_packs_db.get(str(courier.courier_id)))
+            complete_seconds = (complete_time - courier.last_timestamp).total_seconds()
+            data['orders'] = list(filter(lambda x: x != order.order_id, data['orders']))
+            order_packs_db.set(str(courier.courier_id), json.dumps(data, cls=DateTimeEncoder))
+
+            order.pack.completed_orders = F("completed_orders") + 1
+            order.complete_time_seconds = complete_seconds
+            order.status = OrderStatus.COMPLETED
+            courier.last_timestamp = complete_time
+
+            if not data['orders']:
+                courier.completed_order_packs = F("completed_order_packs") + 1
+                courier.at_work = False
+                courier.pack = None
+                order_packs_db.delete(str(courier.courier_id))
+
+            save_multiple_objects([order.pack, order, courier])
+
+            return Response({"order_id": order.order_id}, status=status.HTTP_200_OK)
+
+        except (Courier.DoesNotExist, Order.DoesNotExist, Exception) as e:
+            return Response({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)

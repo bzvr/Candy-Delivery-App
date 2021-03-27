@@ -61,3 +61,4 @@ class Order(models.Model):
     status = models.IntegerField(default=OrderStatus.NEW, choices=OrderStatus.choices)
     courier = models.ForeignKey(Courier, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
     pack = models.ForeignKey(Pack, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
+    complete_time_seconds = models.PositiveBigIntegerField(null=True, blank=True, default=None)
