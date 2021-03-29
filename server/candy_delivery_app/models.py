@@ -17,16 +17,6 @@ class OrderStatus(models.IntegerChoices):
     COMPLETED = 2, "completed"
 
 
-class Pack(models.Model):
-    assign_time = models.DateTimeField()
-    n_orders = models.PositiveIntegerField()
-    completed_orders = models.PositiveIntegerField(default=0)
-
-    @property
-    def pack_id(self):
-        return self.id
-
-
 class Courier(models.Model):
     COURIER_TYPES = (
         ("foot", "foot"),
@@ -42,7 +32,7 @@ class Courier(models.Model):
     completed_order_packs = models.PositiveIntegerField(default=0)
     at_work = models.BooleanField(default=False)
     last_timestamp = models.DateTimeField(null=True, blank=True)
-    pack = models.ForeignKey(Pack, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
+    order_pack = models.ForeignKey("Pack", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
 
     @property
     def max_weight(self):
@@ -60,5 +50,18 @@ class Order(models.Model):
     delivery_hours = ArrayField(models.CharField(max_length=12, validators=[validate_hours]))
     status = models.IntegerField(default=OrderStatus.NEW, choices=OrderStatus.choices)
     courier = models.ForeignKey(Courier, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
-    pack = models.ForeignKey(Pack, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
+    order_pack = models.ForeignKey("Pack", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
     complete_time_seconds = models.PositiveBigIntegerField(null=True, blank=True, default=None)
+
+
+class Pack(models.Model):
+    assign_time = models.DateTimeField()
+    n_orders = models.PositiveIntegerField()
+    completed_orders = models.PositiveIntegerField(default=0)
+    assigned_courier = models.ForeignKey(Courier, null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
+    coefficient = models.PositiveIntegerField()
+    is_completed = models.BooleanField(default=False)
+
+    @property
+    def pack_id(self):
+        return self.id
