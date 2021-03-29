@@ -44,8 +44,6 @@ services:
   redis:
     hostname: redis
     restart: always
-    ports:
-      - "6379"
     image: redis:6.2.1-alpine
     volumes:
       - redisdata:/data

@@ -15,8 +15,8 @@ bzvr@remote:~$ cd Candy-Delivery-Ap/
 bzvr@remote:~$ sudo systemctl enable docker
 ```
 
-#### Development mode
-1. Build and run 
+#### Development mode (Django server)
+1. Build and run. 
  ```console
 bzvr@remote:~/Candy-Delivery-App$ sudo docker-compose up --build
 ```
@@ -26,7 +26,7 @@ bzvr@remote:~/Candy-Delivery-App$ sudo docker-compose down -v
 ```
 Use this mode only on localhost!
 
-#### Production mode
+#### Production mode (Nginx + Gunicorn)
 
 1.  Create a ```env.prod``` file and put the content of the file ```env.dev``` there, replacing credentials with more secure ones.
 
