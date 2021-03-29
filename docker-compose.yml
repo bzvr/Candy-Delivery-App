@@ -4,14 +4,12 @@ services:
   postgres:
     container_name: postgres
     hostname: postgres
-    image: postgres:latest
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+    image: postgres:13-alpine
     restart: always
     volumes:
       - postgresql-data:/var/lib/postgresql/data
+    env_file:
+      - ./env.dev
 
   server:
     build: .
@@ -24,15 +22,13 @@ services:
     hostname: server
     image: server-image
     env_file:
-      - ./.env.dev
+      - ./env.dev
     restart: always
 
   redis:
     hostname: redis
     restart: always
-    ports:
-      - "6379"
-    image: redis:latest
+    image: redis:6.2.1-alpine
     volumes:
       - redisdata:/data
     command: [sh, -c, "rm -f /data/dump.rdb && redis-server"]

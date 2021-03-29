@@ -55,6 +55,11 @@ DJANGO_ADMIN_PASSWORD=*******
 bzvr@remote:~/Candy-Delivery-App$ sudo docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
+#### Run tests
+ ```console
+bzvr@remote:~/Candy-Delivery-App$ sudo docker exec -it server python manage.py test -v 2
+```
+
 #### Docker Images
 ```
 Image                         Version
