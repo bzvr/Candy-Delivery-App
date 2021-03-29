@@ -58,9 +58,9 @@ bzvr@remote:~/Candy-Delivery-App$ sudo docker-compose -f docker-compose.prod.yml
 Package     			Version
 
 Django      			3.1.7
-djangorestframework     3.11.0
+djangorestframework      3.11.0
 django-restapi 			0.1.3
-psycopg2-binary     	2.8.5
+psycopg2-binary     	 2.8.5
 redis       			3.5.3
 gunicorn      			20.1.0
 python-dateutil    		2.22.0
