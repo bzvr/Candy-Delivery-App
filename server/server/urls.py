@@ -22,5 +22,5 @@ router = routers.SimpleRouter(trailing_slash=False)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('candy_delivery_app.urls')),
+    path('', include('candy_delivery_app.urls')),
 ]

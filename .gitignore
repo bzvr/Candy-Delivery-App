@@ -138,3 +138,5 @@ server/orders.json
 server/time_testing.py
 server/postman.ipynb
 server/.ipynb_checkpoints
+
+env.prod

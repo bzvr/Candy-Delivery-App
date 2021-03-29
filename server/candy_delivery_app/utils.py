@@ -23,24 +23,26 @@ def custom_exception_handler(exc, context):
         return response
 
     if response is not None:
+        try:
+            if isinstance(response.data, dict):
+                oid = int(context["request"].get_full_path().split('/')[-1])
+                customized_response = {'validation_error': {'id': oid, 'errors': []}}
+                for key, value in response.data.items():
+                    customized_response['validation_error']['errors'].append({"field": key, "message": value})
 
-        if isinstance(response.data, dict):
-            oid = int(context["request"].get_full_path().split('/')[-1])
-            customized_response = {'validation_error': {'id': oid, 'errors': []}}
-            for key, value in response.data.items():
-                customized_response['validation_error']['errors'].append({"field": key, "message": value})
+            else:
+                customized_response = {'validation_error': {name: []}}
+                for i, obj in enumerate(response.data):
+                    if obj:
+                        oid = context['request'].data['data'][i][sid]
+                        error = {'id': oid, 'errors': []}
+                        for key, value in obj.items():
+                            error['errors'].append({"field": key, "message": value})
+                        customized_response["validation_error"][name].append(error)
 
-        else:
-            customized_response = {'validation_error': {name: []}}
-            for i, obj in enumerate(response.data):
-                if obj:
-                    oid = context['request'].data['data'][i][sid]
-                    error = {'id': oid, 'errors': []}
-                    for key, value in obj.items():
-                        error['errors'].append({"field": key, "message": value})
-                    customized_response["validation_error"][name].append(error)
-
-        response.data = customized_response
+            response.data = customized_response
+        except Exception:
+            pass
     return response
 
 

@@ -141,7 +141,7 @@ class CompleteOrderView(APIView):
                 raise Exception
 
             data = json.loads(order_packs_db.get(str(courier.courier_id)))
-            complete_seconds = (complete_time - courier.last_timestamp).total_seconds()
+            complete_seconds = (abs(complete_time - courier.last_timestamp)).total_seconds()
             data['orders'] = list(filter(lambda x: x != order.order_id, data['orders']))
             order_packs_db.set(str(courier.courier_id), json.dumps(data, cls=DateTimeEncoder))
 
