@@ -48,6 +48,7 @@ POSTGRES_PORT=5432
 
 DJANGO_ADMIN_USERNAME=admin
 DJANGO_ADMIN_PASSWORD=*******
+DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
 ```
 
 2. Build and run (```-d``` for running containers in the background).
