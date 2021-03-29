@@ -19,12 +19,13 @@ services:
       - server
     volumes:
       - static_volume:/home/app/server/static
+    restart: always
 
   server:
     build:
      context: .
      dockerfile: Dockerfile.prod
-    command: sh -c "gunicorn server.wsgi:application --bind 0.0.0.0:8080"
+    command: sh -c "gunicorn --workers=4 server.wsgi:application --bind 0.0.0.0:8080"
     container_name: server
     depends_on:
       - postgres
