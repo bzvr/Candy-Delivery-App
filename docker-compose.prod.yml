@@ -38,7 +38,7 @@ services:
     volumes:
       - static_volume:/home/app/server/static
     environment:
-      - DEBUG=1
+      - DEBUG=0
 
   redis:
     hostname: redis
