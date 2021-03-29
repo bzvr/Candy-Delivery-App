@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from candy_delivery_app.models import Courier, Order, OrderStatus, Pack
 from candy_delivery_app.serializers import CourierSerializer, OrderSerializer, StuffOrderSerializer
-from candy_delivery_app.utils import is_time_overlapping, DateTimeEncoder, save_multiple_objects, get_orders_for_pack, \
+from candy_delivery_app.utils import DateTimeEncoder, save_multiple_objects, get_orders_for_pack, \
     update_pack_after_patch, calc_rating, calc_earnings
 
 order_packs_db = Redis(host='redis', port=6379, db=0)
