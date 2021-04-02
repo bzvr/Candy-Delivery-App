@@ -12,7 +12,7 @@ REST API implementation of candy delivery app "Сласти от всех нап
  ```console
 bzvr@remote:~$ sudo apt install git
 bzvr@remote:~$ git clone https://github.com/bzvr/Candy-Delivery-App
-bzvr@remote:~$ cd Candy-Delivery-Ap/
+bzvr@remote:~$ cd Candy-Delivery-App/
 bzvr@remote:~$ sudo systemctl enable docker
 ```
 
